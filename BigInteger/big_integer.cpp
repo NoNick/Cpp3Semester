@@ -46,142 +46,6 @@ uint64_t genFromMask(std::vector <bool> mask) {
     return result;
 }
 
-// abs(a) < abs(b)
-bool absLess(big_integer const& a, big_integer const& b) {
-    int i1, i2;
-    for (i1 = (int) (a.data.size() - 1); i1 > 0 && a.data[i1] == 0; i1--);
-    for (i2 = (int) (b.data.size() - 1); i2 > 0 && b.data[i2] == 0; i2--);
-
-    if (i1 != i2)
-        return i1 < i2;
-    for (; i1 >= 0; i1--) {
-        if (a.data[i1] != b.data[i1])
-            return a.data[i1] < b.data[i1];
-    }
-
-    return false;
-}
-
-// set x and y to one size
-void setSizeTwoSigned(big_integer *x, big_integer *y) {
-    x->from2sCompliment();
-    y->from2sCompliment();
-    x->setSize((int) std::max(x->data.size(), y->data.size()));
-    y->setSize((int) std::max(x->data.size(), y->data.size()));
-    x->to2sCompliment();
-    y->to2sCompliment();
-}
-
-// returns x / y and puts x % y into first argument
-big_integer divMod(big_integer &x, big_integer &y) {
-    x.from2sCompliment();
-    y.from2sCompliment();
-
-    big_integer result(0);
-    result.twoCompilment = false;
-    bool newSign = x.sign ^ y.sign, oldSign = x.sign;
-    if (absLess(x, y)) {
-        return big_integer(0);
-    }
-    else {
-        x.sign = false;
-        y.sign = false;
-        x.setSize();
-        y.setSize();
-
-        y.from2sCompliment();
-        // most significant word should be >= MASK / 2
-        int msb = y.leadingBit((int) (y.data.size() - 1));
-        y <<= LOG - msb - 2;
-        x <<= LOG - msb - 2;
-        y.setSize();
-        x.setSize();
-
-        long long m = (long long int) (x.data.size() - y.data.size()), n = (long long int) (y.data.size() - 1);
-        big_integer tmp, tmp1;
-        result.data.resize((size_t) m);
-        uint64_t q;
-        for (long long j = m - 1; j >= 0; j--) {
-            q =  ((uint64_t) x.data[n + j + 1] << LOG) + x.data[n  + j];
-            q /= y.data[n];
-            q = std::min(q, power2[LOG] - 1);
-            tmp = y;
-            tmp.mulByWord(q, (int) j);
-            while (absLess(x, tmp)) {
-                tmp1.data.resize((size_t) (j + 1));
-                tmp1.data[j] = 1;
-                q--;
-                tmp.unsignedSub(tmp1);
-            }
-            x.unsignedSub(tmp);
-            result.data[j] = (uint32_t) q;
-        }
-    }
-
-    x.setSize();
-    if (x != 0)
-        x.sign = oldSign;
-    x.to2sCompliment();
-    result.setSize();
-    result.sign = newSign;
-    result.twoCompilment = false;
-    result.to2sCompliment();
-
-    return result;
-}
-
-int abs_compare(big_integer const& a, big_integer const& b, int shift)
-{
-    if (a.data.size() > b.data.size() + shift) {
-        return 1;
-    }
-    if (a.data.size() < b.data.size() + shift) {
-        return -1;
-    }
-    for (int i = (int) (a.data.size() - 1); i >= shift; i--) {
-        if (a.data[i] > b.data[i - shift]) {
-            return 1;
-        }
-        if (a.data[i] < b.data[i - shift]) {
-            return -1;
-        }
-    }
-    for (int i = shift - 1; i >= 0; i--) {
-        if (a.data[i] > 0) {
-            return 1;
-        }
-    }
-    return 0;
-}
-
-// return a % b in decimal
-// set quotient to a / b;
-uint64_t mod(big_integer a, uint64_t b, big_integer *quotient) {
-    quotient->data.resize(a.data.size());
-    uint64_t r = 0, l, tmp1, tmp2, x;
-    int i;
-    for (i = (int) (a.data.size() - 1); i >= 0; i--) {
-        l = a.data[i];
-        tmp1 = (l & 0xFFFF);
-        tmp2 = (l >> 16) + (r << 16);
-        x = tmp2 / b;
-        r = tmp2 % b;
-        quotient->data[i] = (uint32_t) (x << 16);
-        tmp1 += (r << 16);
-        x = tmp1 / b;
-        r = tmp1 % b;
-        quotient->data[i] += x;
-    }
-
-    for (i = (int) (quotient->data.size() - 1); i >= 0; i--) {
-        if (quotient->data[i] != 0)
-            break;
-    }
-    quotient->data.resize((size_t) (i + 1));
-
-    return r;
-}
-
 //////////////////////////////////////////////////////////////////////
 /////////////////////////// Class methods ////////////////////////////
 //////////////////////////////////////////////////////////////////////
@@ -740,7 +604,7 @@ bool operator<(big_integer const& a, big_integer const& b) {
     if (a.sign != b.sign)
         return a.sign;
 
-    return absLess(a, b);
+    return big_integer::absLess(a, b);
 }
 
 bool operator>(big_integer const& a, big_integer const& b) {
@@ -853,7 +717,7 @@ std::string to_string(big_integer const& a)
         curr.from2sCompliment();
     while (quotient.data.size() > 1 ||
            (quotient.data.size() == 1 && quotient.data.front() != 0)) {
-        result = intToString((int) mod(curr, 1000, &quotient), 3) + result;
+        result = intToString((int) big_integer::mod(curr, 1000, &quotient), 3) + result;
         curr = quotient;
     }
 
@@ -880,4 +744,140 @@ std::istream& operator>>(std::istream& s, big_integer &a) {
     s >> tmp;
     a = big_integer(tmp);
     return s;
+}
+
+// abs(a) < abs(b)
+bool big_integer::absLess(big_integer const& a, big_integer const& b) {
+    int i1, i2;
+    for (i1 = (int) (a.data.size() - 1); i1 > 0 && a.data[i1] == 0; i1--);
+    for (i2 = (int) (b.data.size() - 1); i2 > 0 && b.data[i2] == 0; i2--);
+
+    if (i1 != i2)
+        return i1 < i2;
+    for (; i1 >= 0; i1--) {
+        if (a.data[i1] != b.data[i1])
+            return a.data[i1] < b.data[i1];
+    }
+
+    return false;
+}
+
+// set x and y to one size
+void big_integer::setSizeTwoSigned(big_integer *x, big_integer *y) {
+    x->from2sCompliment();
+    y->from2sCompliment();
+    x->setSize((int) std::max(x->data.size(), y->data.size()));
+    y->setSize((int) std::max(x->data.size(), y->data.size()));
+    x->to2sCompliment();
+    y->to2sCompliment();
+}
+
+// returns x / y and puts x % y into first argument
+big_integer big_integer::divMod(big_integer &x, big_integer &y) {
+    x.from2sCompliment();
+    y.from2sCompliment();
+
+    big_integer result(0);
+    result.twoCompilment = false;
+    bool newSign = x.sign ^ y.sign, oldSign = x.sign;
+    if (absLess(x, y)) {
+        return big_integer(0);
+    }
+    else {
+        x.sign = false;
+        y.sign = false;
+        x.setSize();
+        y.setSize();
+
+        y.from2sCompliment();
+        // most significant word should be >= MASK / 2
+        int msb = y.leadingBit((int) (y.data.size() - 1));
+        y <<= LOG - msb - 2;
+        x <<= LOG - msb - 2;
+        y.setSize();
+        x.setSize();
+
+        long long m = (long long int) (x.data.size() - y.data.size()), n = (long long int) (y.data.size() - 1);
+        big_integer tmp, tmp1;
+        result.data.resize((size_t) m);
+        uint64_t q;
+        for (long long j = m - 1; j >= 0; j--) {
+            q =  ((uint64_t) x.data[n + j + 1] << LOG) + x.data[n  + j];
+            q /= y.data[n];
+            q = std::min(q, power2[LOG] - 1);
+            tmp = y;
+            tmp.mulByWord(q, (int) j);
+            while (absLess(x, tmp)) {
+                tmp1.data.resize((size_t) (j + 1));
+                tmp1.data[j] = 1;
+                q--;
+                tmp.unsignedSub(tmp1);
+            }
+            x.unsignedSub(tmp);
+            result.data[j] = (uint32_t) q;
+        }
+    }
+
+    x.setSize();
+    if (x != 0)
+        x.sign = oldSign;
+    x.to2sCompliment();
+    result.setSize();
+    result.sign = newSign;
+    result.twoCompilment = false;
+    result.to2sCompliment();
+
+    return result;
+}
+
+int big_integer::abs_compare(big_integer const& a, big_integer const& b, int shift)
+{
+    if (a.data.size() > b.data.size() + shift) {
+        return 1;
+    }
+    if (a.data.size() < b.data.size() + shift) {
+        return -1;
+    }
+    for (int i = (int) (a.data.size() - 1); i >= shift; i--) {
+        if (a.data[i] > b.data[i - shift]) {
+            return 1;
+        }
+        if (a.data[i] < b.data[i - shift]) {
+            return -1;
+        }
+    }
+    for (int i = shift - 1; i >= 0; i--) {
+        if (a.data[i] > 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+// return a % b in decimal
+// set quotient to a / b;
+uint64_t big_integer::mod(big_integer a, uint64_t b, big_integer *quotient) {
+    quotient->data.resize(a.data.size());
+    uint64_t r = 0, l, tmp1, tmp2, x;
+    int i;
+    for (i = (int) (a.data.size() - 1); i >= 0; i--) {
+        l = a.data[i];
+        tmp1 = (l & 0xFFFF);
+        tmp2 = (l >> 16) + (r << 16);
+        x = tmp2 / b;
+        r = tmp2 % b;
+        quotient->data[i] = (uint32_t) (x << 16);
+        tmp1 += (r << 16);
+        x = tmp1 / b;
+        r = tmp1 % b;
+        quotient->data[i] += x;
+    }
+
+    for (i = (int) (quotient->data.size() - 1); i >= 0; i--) {
+        if (quotient->data[i] != 0)
+            break;
+    }
+    quotient->data.resize((size_t) (i + 1));
+
+    return r;
 }

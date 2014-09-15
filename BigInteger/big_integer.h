@@ -8,11 +8,9 @@
 #include <stdlib.h>
 #include "container.cpp"
 
-struct big_integer
+class big_integer
 {
-    // copy-on-write & small object implementations
-    container data;
-
+public:
     bool sign, twoCompilment;
 
     big_integer();
@@ -58,6 +56,12 @@ struct big_integer
 
     friend std::string to_string(big_integer const& a);
     operator std::string ();
+    // abs(a) < abs(b)
+    static bool absLess(big_integer const& a, big_integer const& b);
+
+private:
+    // copy-on-write & small object implementations
+    container data;
 
     // remove leading zeros (if pos) && maxints (if neg)
     void setSize();
@@ -78,6 +82,15 @@ struct big_integer
     // returns value from 0 to LOG - 1: first true bit in data[n]
     // returns -1 if all bits are false
     int leadingBit(int n);
+
+    // set x and y to one size
+    static void setSizeTwoSigned(big_integer *x, big_integer *y);
+    // returns x / y and puts x % y into first argument
+    static big_integer divMod(big_integer &x, big_integer &y);
+    // return a % b in decimal
+    // set quotient to a / b;
+    static uint64_t mod(big_integer a, uint64_t b, big_integer *quotient);
+    static int abs_compare(big_integer const& a, big_integer const& b, int shift);
 };
 
 big_integer operator+(big_integer a, big_integer const& b);
