@@ -4,11 +4,8 @@
 #include <string.h>
 
 const int smallSize = 32;
-struct container {
-    uint32_t small[smallSize];
-    std::vector <uint32_t> *big;
-    size_t *cnt, size_;
-
+class container {
+public:
     container() {
         size_ = 0;
     }
@@ -19,42 +16,6 @@ struct container {
 
     ~container() {
         deleteBig();
-    }
-
-    void load(container const &other){
-        size_ = other.size_;
-        if (size_ <= (unsigned)smallSize) {
-            // possible overlap at self-assignment
-            memmove(small, other.small, sizeof(uint32_t) * other.size_);
-        }
-        else {
-            big = other.big;
-            cnt = other.cnt;
-            (*cnt)++;
-        }
-    }
-
-    void fork() {
-        if (size_ > (unsigned) smallSize && (*cnt) > 1) {
-            big = new std::vector <uint32_t>(*big);
-            (*cnt)--;
-            cnt = new size_t(1);
-        }
-    }
-
-    void deleteBig() {
-        if (size_ > (unsigned) smallSize) {
-            (*cnt)--;
-            if (*cnt == 0) {
-                delete cnt;
-                delete big;
-            }
-        }
-    }
-
-    void createBig() {
-        big = new std::vector <uint32_t>(small, small + size_);
-        cnt = new size_t(1);
     }
 
     size_t size() const{
@@ -124,20 +85,20 @@ struct container {
             deleteBig();
             size_ = newSize;
         }
-        // both objects are small
+            // both objects are small
         else if (newSize <= (unsigned) smallSize) {
             for (size_t i = size_; i < newSize; i++) {
                 small[i] = 0;
             }
             size_ = newSize;
         }
-        // new object is big, the old one is small
+            // new object is big, the old one is small
         else if (newSize > (unsigned) smallSize && size_ <= (unsigned) smallSize) {
             createBig();
             size_ = newSize;
             big->resize(size_);
         }
-        // both objects are big
+            // both objects are big
         else {
             size_ = newSize;
             big->resize(size_);
@@ -149,5 +110,46 @@ struct container {
         for (size_t i = 0; i < size_; i++) {
             operator [](i) = x[i];
         }
+    }
+
+private:
+    uint32_t small[smallSize];
+    std::vector <uint32_t> *big;
+    size_t *cnt, size_;
+
+    void load(container const &other){
+        size_ = other.size_;
+        if (size_ <= (unsigned)smallSize) {
+            // possible overlap at self-assignment
+            memmove(small, other.small, sizeof(uint32_t) * other.size_);
+        }
+        else {
+            big = other.big;
+            cnt = other.cnt;
+            (*cnt)++;
+        }
+    }
+
+    void fork() {
+        if (size_ > (unsigned) smallSize && (*cnt) > 1) {
+            big = new std::vector <uint32_t>(*big);
+            (*cnt)--;
+            cnt = new size_t(1);
+        }
+    }
+
+    void deleteBig() {
+        if (size_ > (unsigned) smallSize) {
+            (*cnt)--;
+            if (*cnt == 0) {
+                delete cnt;
+                delete big;
+            }
+        }
+    }
+
+    void createBig() {
+        big = new std::vector <uint32_t>(small, small + size_);
+        cnt = new size_t(1);
     }
 };
