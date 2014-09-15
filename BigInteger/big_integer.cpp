@@ -1,4 +1,5 @@
 #include "big_integer.h"
+#include "exception.cpp"
 
 #include <cmath>
 #include <string>
@@ -82,12 +83,12 @@ big_integer::big_integer(int a) {
 
 big_integer::big_integer(std::string const& str) {
     if (str.size() == 0)
-        throw "Empty string";
+        throw parse_exception("Empty string");
     // for further explanations:
     //      std::basic_string<char, ::std::char_traits, ::std::allocator>::const_iterator
     for (auto it = str.begin(); it != str.end(); it++) {
         if (!(isdigit(*it) || (*it == '-' && it == str.begin())))
-            throw "Incorrect string";
+            throw parse_exception("Incorrect string");
     }
 
     std::string s = str;

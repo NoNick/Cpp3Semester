@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include "big_integer.h"
+#include "exception.cpp"
 
 TEST(correctness, two_plus_two)
 {
@@ -547,10 +548,10 @@ TEST(correctness, string_cast) {
 
 TEST(correctness, string_exceptions) {
     EXPECT_NO_THROW(big_integer("1000000000000000000000000000000000000"));
-    EXPECT_THROW(big_integer("0abc1"), const char*);
-    EXPECT_THROW(big_integer("--1"), const char*);
-    EXPECT_THROW(big_integer("1.0"), const char*);
-    EXPECT_THROW(big_integer(""), const char*);
+    EXPECT_THROW(big_integer("0abc1"), parse_exception);
+    EXPECT_THROW(big_integer("--1"), parse_exception);
+    EXPECT_THROW(big_integer("1.0"), parse_exception);
+    EXPECT_THROW(big_integer(""), parse_exception);
 }
 
 namespace
