@@ -11,8 +11,6 @@
 class big_integer
 {
 public:
-    bool sign, twoCompilment;
-
     big_integer();
     // copy constructor
     big_integer(big_integer const& other);
@@ -56,6 +54,7 @@ public:
     static bool absLess(big_integer const& a, big_integer const& b);
 
 private:
+    bool sign, twoCompilment;
     // copy-on-write & small object implementations
     container data;
 
