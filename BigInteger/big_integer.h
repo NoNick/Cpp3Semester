@@ -48,11 +48,7 @@ public:
     big_integer operator--(int);
 
     friend bool operator==(big_integer const& a, big_integer const& b);
-    friend bool operator!=(big_integer const& a, big_integer const& b);
     friend bool operator<(big_integer const& a, big_integer const& b);
-    friend bool operator>(big_integer const& a, big_integer const& b);
-    friend bool operator<=(big_integer const& a, big_integer const& b);
-    friend bool operator>=(big_integer const& a, big_integer const& b);
 
     friend std::string to_string(big_integer const& a);
     operator std::string ();

@@ -14,37 +14,39 @@ uint64_t power2[33] = {1,	2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 
 //////////////////////////////////////////////////////////////////////
 ///////// Useful functions which isn't declared in class /////////////
 //////////////////////////////////////////////////////////////////////
+namespace {
+    // returns number 0b['0'x32]11...10...00 with number of '1' equals size
+    uint64_t genLeftMask(int size) {
+        assert(size <= 32);
+        uint64_t result = 0;
+        for (int i = LOG - 1; LOG - i - 1 < size; i--) {
+            result |= power2[i];
+        }
 
-// returns number 0b['0'x32]11...10...00 with number of '1' equals size
-uint64_t genLeftMask(int size) {
-    assert(size <= 32);
-    uint64_t result = 0;
-    for (int i = LOG - 1; LOG - i - 1 < size; i--) {
-        result |= power2[i];
+        return result;
     }
 
-    return result;
-}
-// returns number 0b['0'x32]00...01...11 with number of '1' equals size
-uint64_t genRightMask(int size) {
-    assert(size <= 32);
-    uint64_t result = 0;
-    for (int i = 0; i < size; i++) {
-        result |= power2[i];
+    // returns number 0b['0'x32]00...01...11 with number of '1' equals size
+    uint64_t genRightMask(int size) {
+        assert(size <= 32);
+        uint64_t result = 0;
+        for (int i = 0; i < size; i++) {
+            result |= power2[i];
+        }
+
+        return result;
     }
 
-    return result;
-}
+    // from binary mask to long value (mask and value are unsigned)
+    uint64_t genFromMask(std::vector<bool> mask) {
+        assert(mask.size() <= 32);
+        uint64_t result = 0;
+        for (unsigned i = 0; i < mask.size(); i++) {
+            result |= power2[i] * mask[i];
+        }
 
-// from binary mask to long value (mask and value are unsigned)
-uint64_t genFromMask(std::vector <bool> mask) {
-    assert(mask.size() <= 32);
-    uint64_t result = 0;
-    for (unsigned i = 0; i < mask.size(); i++) {
-        result |= power2[i] * mask[i];
+        return result;
     }
-
-    return result;
 }
 
 //////////////////////////////////////////////////////////////////////
