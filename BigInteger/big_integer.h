@@ -54,7 +54,7 @@ public:
     static bool absLess(big_integer const& a, big_integer const& b);
 
 private:
-    bool sign, twoCompilment;
+    bool sign, twoCompliment;
     // copy-on-write & small object implementations
     container data;
 

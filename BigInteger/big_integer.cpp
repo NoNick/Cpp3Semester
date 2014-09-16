@@ -54,33 +54,33 @@ namespace {
 //////////////////////////////////////////////////////////////////////
 
 big_integer::big_integer() {
-    twoCompilment = true;
+    twoCompliment = true;
     sign = false;
     data.push_back(0);
 }
 
 big_integer::big_integer(big_integer const& other) {
-    twoCompilment = other.twoCompilment;
+    twoCompliment = other.twoCompliment;
     sign = other.sign;
     data = other.data;
 }
 
 big_integer::big_integer(big_integer &&other) {
-    twoCompilment = other.twoCompilment;
+    twoCompliment = other.twoCompliment;
     sign = other.sign;
-    data = other.data;
+    data = std::move(other.data);
 }
 
 big_integer::big_integer(int a) {
     data.push_back((uint32_t) std::abs(a));
     if (a < 0) {
-        twoCompilment = false;
+        twoCompliment = false;
         sign = true;
         to2sCompliment();
     }
     else
         sign = false;
-    twoCompilment = true;
+    twoCompliment = true;
 }
 
 big_integer::big_integer(std::string const& str) {
@@ -139,7 +139,7 @@ big_integer::big_integer(std::string const& str) {
 
     free(in);
 
-    twoCompilment = false;
+    twoCompliment = false;
     to2sCompliment();
 }
 
@@ -147,7 +147,7 @@ big_integer::~big_integer() {
 }
 
 big_integer& big_integer::operator=(big_integer const& other) {
-    twoCompilment = other.twoCompilment;
+    twoCompliment = other.twoCompliment;
     sign = other.sign;
     data = other.data;
     return *this;
@@ -263,7 +263,7 @@ big_integer& big_integer::operator-=(big_integer const& rhs) {
     big_integer result = (*this + (-rhs));
     this->data = result.data;
     this->sign = result.sign;
-    this->twoCompilment = result.twoCompilment;
+    this->twoCompliment = result.twoCompliment;
     return *this;
 }
 
@@ -307,7 +307,7 @@ big_integer& big_integer::operator/=(big_integer const& rhs) {
     big_integer l = big_integer(*this), r = big_integer(rhs), tmp;
     from2sCompliment();
     sign = l.sign ^ r.sign;
-    twoCompilment = false;
+    twoCompliment = false;
     l.from2sCompliment();
     r.from2sCompliment();
     l.sign = r.sign = false;
@@ -395,7 +395,7 @@ big_integer& big_integer::operator&=(big_integer const& rhs) {
 
     data = x.data;
     sign = (bool) (x.data[x.data.size() - 1] & power2[LOG - 1]);
-    twoCompilment = x.twoCompilment;
+    twoCompliment = x.twoCompliment;
 
     return *this;
 }
@@ -411,7 +411,7 @@ big_integer& big_integer::operator|=(big_integer const& rhs)
 
     data = x.data;
     sign = (bool) (x.data[x.data.size() - 1] & power2[LOG - 1]);
-    twoCompilment = x.twoCompilment;
+    twoCompliment = x.twoCompliment;
 
     return *this;
 }
@@ -426,7 +426,7 @@ big_integer& big_integer::operator^=(big_integer const& rhs) {
 
     data = x.data;
     sign = (bool) (x.data[x.data.size() - 1] & power2[LOG - 1]);
-    twoCompilment = x.twoCompilment;
+    twoCompliment = x.twoCompliment;
 
     return *this;
 }
@@ -655,7 +655,7 @@ void big_integer::unsignedNot() {
 }
 
 void big_integer::to2sCompliment() {
-    if (!twoCompilment) {
+    if (!twoCompliment) {
         // -0 case
         if (data.size() == 1 && data.front() == 0)
             sign = false;
@@ -679,12 +679,12 @@ void big_integer::to2sCompliment() {
                 data.back() = 0;
             }
         }
-        twoCompilment = true;
+        twoCompliment = true;
     }
 }
 
 void big_integer::from2sCompliment() {
-    if (twoCompilment) {
+    if (twoCompliment) {
         // -0 case
         if (data.size() == 1 && data.front() == 0)
             sign = false;
@@ -697,7 +697,7 @@ void big_integer::from2sCompliment() {
             // lead integer might be zero
             setSize();
         }
-        twoCompilment = false;
+        twoCompliment = false;
     }
 }
 
@@ -781,7 +781,7 @@ big_integer big_integer::divMod(big_integer &x, big_integer &y) {
     y.from2sCompliment();
 
     big_integer result(0);
-    result.twoCompilment = false;
+    result.twoCompliment = false;
     bool newSign = x.sign ^ y.sign, oldSign = x.sign;
     if (absLess(x, y)) {
         return big_integer(0);
@@ -827,7 +827,7 @@ big_integer big_integer::divMod(big_integer &x, big_integer &y) {
     x.to2sCompliment();
     result.setSize();
     result.sign = newSign;
-    result.twoCompilment = false;
+    result.twoCompliment = false;
     result.to2sCompliment();
 
     return result;
