@@ -14,6 +14,7 @@ struct BoardState {
 
     BoardState();
     ~BoardState();
+    // prints all info into stdout
     void print() const;
 };
 

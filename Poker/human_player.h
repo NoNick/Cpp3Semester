@@ -9,7 +9,8 @@ public:
     HumanPlayer() {};
     HumanPlayer(std::string s): Player(s) {};
     ~HumanPlayer() {};
-    // throws std::invalid_argument, std::out_of_range
+    // print state & ask user for action
+    // throws std::invalid_argument, std::out_of_range in case of incorrect input
     unsigned bet(unsigned minBet, BoardState state);
 };
 

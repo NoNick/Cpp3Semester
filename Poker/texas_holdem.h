@@ -68,11 +68,14 @@ private:
     template <class First, class... Rest>
     void addPlayers(unsigned cnt, First* first, Rest* ... rest);
 
+    TexasHoldem();
+    template <class ... Players>
+    friend TexasHoldem* createGame(unsigned n, unsigned initCash, unsigned smallBlind, Players* ... p);
+
     FRIEND_TEST(correctness, evaluateCombination);
     FRIEND_TEST(correctness, pickCombination);
     FRIEND_TEST(correctness, shuffleTest);
 public:
-    TexasHoldem();
     ~TexasHoldem();
     // init deck (only playersN * 2 + 5 cards)
     // (52 - 5) / 2 >= playersN

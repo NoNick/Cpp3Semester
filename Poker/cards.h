@@ -13,16 +13,20 @@ protected:
     suit s;
     int rank;
 public:
-    Card() {};
+    Card() {}
 };
 
 class OpenCard: Card {
 public:
+    // returns value 2..14: rank of a card
     int getRank()const;
+    // returns suit of a card
     suit getSuit()const;
     OpenCard();
     OpenCard(const suit, const int);
+    // required for std::count
     bool operator==(OpenCard const& another);
+    // returns string description of a card
     std::string toString() const;
 };
 

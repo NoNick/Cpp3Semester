@@ -4,6 +4,8 @@
 #include "texas_holdem.h"
 #include "cards.h"
 
+// static no-class function permits to create object without template in it
+// should be used instead of default constructor
 template <class ... Players>
 TexasHoldem* createGame(unsigned n, unsigned initCash, unsigned smallBlind, Players* ... p) {
     TexasHoldem* result = new TexasHoldem();
