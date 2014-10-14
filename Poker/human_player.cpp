@@ -4,5 +4,5 @@
 #include "textui.h"
 
 unsigned HumanPlayer::bet(unsigned minBet, BoardState state) {
-    return TextUI::askForUnsigned(this, minBet);
+    return UI->askForUnsigned(this, minBet);
 }

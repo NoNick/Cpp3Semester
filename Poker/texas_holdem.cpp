@@ -74,8 +74,12 @@ unsigned* TexasHoldem::evaluate(OpenCard *cards) {
 
     if (straight) {
         result[1] = (unsigned int) cards[std::max(pos - 1, 0)].getRank();
-        if (result[0] == 5)
-            result[0] = 8;
+        if (result[0] == 5) {
+            if (cards[0].getRank() == 14 && cards[4].getRank() == 10)
+                result[0] = 9;
+            else
+                result[0] = 8;
+        }
         else
             result[0] = 4;
     }
@@ -182,11 +186,12 @@ unsigned* TexasHoldem::evaluate(OpenCard *cards) {
 }
 
 TexasHoldem::~TexasHoldem() {
-    delete[]players;
+    delete[] players;
+    delete[] UI;
 }
 
 TexasHoldem::PlayerData::~PlayerData() {
-    delete[]hand;
+    delete[] hand;
     delete p;
 }
 
@@ -251,16 +256,16 @@ std::vector<unsigned> TexasHoldem::refresh() {
 }
 
 void TexasHoldem::doRound() {
-    TextUI::print("New round\n");
+    UI->print("New round\n");
     board.clear();
     unsigned small = myUpperBound(inGame, (dealer + 1) % playersN),
             big = myUpperBound(inGame, (small + 1) % playersN);
     players[small].cash -= smallBlind;
     players[small].currBet = smallBlind;
-    TextUI::smallBlind(players[small].p, smallBlind);
+    UI->smallBlind(players[small].p, smallBlind);
     players[big].cash -= smallBlind * 2;
     players[big].currBet = smallBlind * 2;
-    TextUI::bigBlind(players[big].p, smallBlind * 2);
+    UI->bigBlind(players[big].p, smallBlind * 2);
     pot = smallBlind * 3;
 
     unsigned underTheGun = big = myUpperBound(inGame, (big + 1) % playersN);
@@ -283,7 +288,7 @@ void TexasHoldem::doRound() {
         players[winners[i]].cash += pot / winners.size();
         winnersPointers.push_back(players[winners[i]].p);
     }
-    TextUI::win(winnersPointers);
+    UI->win(winnersPointers);
 }
 
 void TexasHoldem::doBets(unsigned underTheGun) {
@@ -294,7 +299,7 @@ void TexasHoldem::doBets(unsigned underTheGun) {
 
     do {
         if (players[curr].cash != 0) {
-            TextUI::printState(*players[curr].p, getState(curr, inGame));
+            UI->printState(*players[curr].p, getState(curr, inGame));
             for (int i = 0; i < 3; i++) {
                 bool wrongInput = false;
                 try {
@@ -309,21 +314,21 @@ void TexasHoldem::doBets(unsigned underTheGun) {
                     break;
                 if (i == 2) {
                     value = 0;
-                    TextUI::print("wrong value, check/fold by default\n");
+                    UI->print("wrong value, check/fold by default\n");
                     break;
                 }
                 else
-                    TextUI::print("wrong value, try again (" + std::to_string(2 - i) + ")\n");
+                    UI->print("wrong value, try again (" + std::to_string(2 - i) + ")\n");
             }
             // call/raise
             if (value > 0) {
                 if (value + players[curr].currBet > currBet) {
                     last = curr;
                     currBet = value + players[curr].currBet;
-                    TextUI::raise(players[curr].p, currBet, value);
+                    UI->raise(players[curr].p, currBet, value);
                 }
                 else {
-                    TextUI::call(players[curr].p, currBet, value);
+                    UI->call(players[curr].p, currBet, value);
                 }
                 players[curr].cash -= value;
                 players[curr].currBet += value;
@@ -333,11 +338,11 @@ void TexasHoldem::doBets(unsigned underTheGun) {
             else {
                 // check
                 if (currBet - players[curr].currBet == 0) {
-                    TextUI::check(players[curr].p);
+                    UI->check(players[curr].p);
                 }
                 // fold
                 else {
-                    TextUI::fold(players[curr].p);
+                    UI->fold(players[curr].p);
                     assert(std::find(inGame.begin(), inGame.end(), curr) != inGame.end());
                     inGame.erase(std::find(inGame.begin(), inGame.end(), curr));
                     if (inGame.size() == 1)
@@ -376,7 +381,7 @@ std::vector<unsigned> TexasHoldem::showdown() {
         }
 
         if (inGame.size() > 1)
-            TextUI::showdown(players[inGame[i]].p, highest, currValue);
+            UI->showdown(players[inGame[i]].p, highest, currValue);
         delete[] highest;
     }
     delete[] maxValue;
@@ -385,7 +390,7 @@ std::vector<unsigned> TexasHoldem::showdown() {
 }
 
 void TexasHoldem::shuffle() {
-    TextUI::print("Shuffling cards...\n\n");
+    UI->print("Shuffling cards...\n\n");
 
     const int N = 52;
     std::pair<suit, int> deckTmp[N];

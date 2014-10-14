@@ -6,11 +6,13 @@
 #include "cards.h"
 #include "player.h"
 #include "board_state.h"
+#include "textui.h"
 
 class OpenCard;
 class CloseCard;
 class Player;
 class BoardState;
+class TextUI;
 
 class TexasHoldem {
 private:
@@ -34,8 +36,9 @@ private:
     //     straight: 4
     //     flush: 5
     //     full house: 6
-    //     carte: 7
+    //     four of a kind: 7
     //     straight flush: 8
+    //     royal flush: 9
     // combination_relevance: rank among the same combination, for example pair of aces > pair of kings
     unsigned* evaluate(OpenCard* cards);
     // takes pointer to 7-elements array
@@ -69,18 +72,19 @@ private:
     void addPlayers(unsigned cnt, First* first, Rest* ... rest);
 
     TexasHoldem();
+    // static no-class function permits to create object without template in it
+    // should be used instead of default constructor
     template <class ... Players>
-    friend TexasHoldem* createGame(unsigned n, unsigned initCash, unsigned smallBlind, Players* ... p);
+    friend TexasHoldem* createGame(unsigned n, unsigned initCash, unsigned smallBlind,
+                                   TextUI* ui, Players* ... p);
+
+    TextUI* UI;
 
     FRIEND_TEST(correctness, evaluateCombination);
     FRIEND_TEST(correctness, pickCombination);
     FRIEND_TEST(correctness, shuffleTest);
 public:
     ~TexasHoldem();
-    // init deck (only playersN * 2 + 5 cards)
-    // (52 - 5) / 2 >= playersN
-    template <class ... Players>
-    friend TexasHoldem* createGame(unsigned playersN, unsigned initCash, unsigned smallBlind, Players* ... p);
     // running until somebody wins
     void run();
 };

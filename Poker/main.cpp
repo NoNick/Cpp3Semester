@@ -7,8 +7,9 @@
 using namespace std;
 
 int main() {
-    TexasHoldem* game = createGame((unsigned)2, (unsigned)100, (unsigned) 10,
-            new HumanPlayer("First player"), new HumanPlayer("Second player"));
+    TextUI* ui = new TextUI(false);
+    TexasHoldem* game = createGame((unsigned)2, (unsigned)100, (unsigned) 10, ui,
+            new HumanPlayer("First player", ui), new HumanPlayer("Second player", ui));
     game->run();
     delete game;
     return 0;
