@@ -46,6 +46,12 @@ void TextUI::raise(Player *p, unsigned to, unsigned bet) {
     }
 }
 
+void TextUI::allIn(Player *p, unsigned total) {
+    if (!noUI) {
+        std::cout << p->getName() << " goes all-in: " << total << std::endl;
+    }
+}
+
 void TextUI::check(Player *p) {
     if (!noUI) {
         std::cout << p->getName() << " checks" << std::endl;
@@ -133,6 +139,13 @@ void TextUI::win(std::vector<Player *> winners) {
             std::cout << " " << (*it)->getName();
         }
         std::cout << "\n";
+    }
+}
+
+void TextUI::gameOver(std::vector<Player*> players, std::vector<unsigned> cash) {
+    std::cout << "\nGame over\n";
+    for (unsigned i = 0; i < players.size(); i++) {
+        std::cout << players[i]->getName() << " has " << cash[i] << std::endl;
     }
 }
 

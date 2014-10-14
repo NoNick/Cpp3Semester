@@ -145,6 +145,7 @@ TEST(correctness, evaluateCombination) {
 
 // highestComb should pick first five cards of 7 cards combination:
 //     5♣ 4♦ K♥ 8♠ 10♣ 2♣ 3♠ (highest card)
+//     9♥ 9♠ A♠ 8♠ J♦ 3♠ 5♥ (pair)
 //     5♣ 4♣ A♣ 8♣ 10♣ 5♠ 3♠ (flush, not the pair)
 //     5♣ 4♣ A♣ 8♣ 10♣ 5♠ 4♠ (flush, not the two pairs)
 //     4♣ 5♦ 6♥ 7♠ 8♣ 2♣ 3♠ (straight with 8 highest, not the one with 6 highest)
@@ -156,17 +157,30 @@ TEST(correctness, pickCombination) {
             new HumanPlayer("First player", ui), new HumanPlayer("Second player", ui));
     std::pair<size_t, OpenCard*> out = readCards(pickFile);
     OpenCard *testCards = out.second;
+    OpenCard *shuffledCards = new OpenCard[out.first];
+    memcpy(shuffledCards, out.second, out.first * sizeof(OpenCard));
+
+    srand (time(NULL));
+    for (size_t i = 0; i < out.first / 7; i++) {
+        for (int j = 0; j < 7; j++) {
+            std::swap(shuffledCards[7 * i + j], shuffledCards[7 * i + rand() % 7]);
+        }
+    }
 
     for (unsigned i = 0; i < out.first / 7; i++) {
-        std::pair<OpenCard*, unsigned*> result = game->highestComb(&testCards[i * 7]);
+        std::pair<OpenCard*, unsigned*> result = game->highestComb(&shuffledCards[i * 7]);
         for (unsigned j = 0; j < 5; j++) {
-            EXPECT_EQ(1, std::count(testCards + i * 7,
-                                    testCards + i * 7 + 5, result.first[j]));
+            if (std::count(testCards + i * 7, testCards + i * 7 + 5, result.first[j]) != 1) {
+                int x;
+                x++;
+            }
+            EXPECT_EQ(1, std::count(testCards + i * 7, testCards + i * 7 + 5, result.first[j]));
         }
         delete[] result.first;
         delete[] result.second;
     }
 
     delete[] testCards;
+    delete[] shuffledCards;
     delete game;
 }

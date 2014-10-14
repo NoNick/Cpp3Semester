@@ -57,6 +57,8 @@ private:
     std::vector<unsigned> refresh();
     // remove card from deck and add to board
     void openNext();
+    // returns number of players which are able to bet
+    size_t inGameWithCash();
     // returns state for players[player].p
     BoardState getState(unsigned player, std::vector<unsigned> inGame);
     std::vector <OpenCard> board;

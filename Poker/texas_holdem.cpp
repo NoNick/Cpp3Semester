@@ -261,25 +261,25 @@ void TexasHoldem::doRound() {
     board.clear();
     unsigned small = myUpperBound(inGame, (dealer + 1) % playersN),
             big = myUpperBound(inGame, (small + 1) % playersN);
-    players[small].cash -= smallBlind;
-    players[small].currBet = smallBlind;
-    UI->smallBlind(players[small].p, smallBlind);
-    players[big].cash -= smallBlind * 2;
-    players[big].currBet = smallBlind * 2;
-    UI->bigBlind(players[big].p, smallBlind * 2);
-    pot = smallBlind * 3;
+    players[small].cash -= std::min(smallBlind, players[small].cash);
+    players[small].currBet = std::min(smallBlind, players[small].cash);
+    UI->smallBlind(players[small].p, std::min(smallBlind * 2, players[big].cash));
+    players[big].cash -= std::min(smallBlind * 2, players[big].cash);
+    players[big].currBet = std::min(smallBlind * 2, players[big].cash);
+    UI->bigBlind(players[big].p, std::min(smallBlind * 2, players[big].cash));
+    pot = std::min(smallBlind, players[small].cash) + std::min(smallBlind * 2, players[big].cash);
 
     unsigned underTheGun = big = myUpperBound(inGame, (big + 1) % playersN);
     doBets(underTheGun);
     for (int i = 0; i < 3; i++)
         openNext();
-    if (inGame.size() > 1)
+    if (inGameWithCash() > 1)
         doBets(underTheGun);
     openNext();
-    if (inGame.size() > 1)
+    if (inGameWithCash() > 1)
         doBets(underTheGun);
     openNext();
-    if (inGame.size() > 1)
+    if (inGameWithCash() > 1)
         doBets(underTheGun);
     std::vector<unsigned> winners = showdown();
     assert(winners.size() > 0);
@@ -311,7 +311,9 @@ void TexasHoldem::doBets(unsigned underTheGun) {
                     wrongInput = true;
 
                 }
-                if (((players[curr].cash >= value && value + players[curr].currBet >= currBet) || value == 0) && !wrongInput)
+                // bet/raise or check/fold or all-in
+                if (((players[curr].cash >= value && value + players[curr].currBet >= currBet) || value == 0 ||
+                     value == players[curr].cash) && !wrongInput)
                     break;
                 if (i == 2) {
                     value = 0;
@@ -321,15 +323,21 @@ void TexasHoldem::doBets(unsigned underTheGun) {
                 else
                     UI->print("wrong value, try again (" + std::to_string(2 - i) + ")\n");
             }
-            // call/raise
+            // call/raise/all-in
             if (value > 0) {
                 if (value + players[curr].currBet > currBet) {
                     last = curr;
                     currBet = value + players[curr].currBet;
-                    UI->raise(players[curr].p, currBet, value);
+                    if (value == players[curr].cash)
+                        UI->allIn(players[curr].p, currBet);
+                    else
+                        UI->raise(players[curr].p, currBet, value);
                 }
                 else {
-                    UI->call(players[curr].p, currBet, value);
+                    if (value == players[curr].cash)
+                        UI->allIn(players[curr].p, players[curr].currBet + value);
+                    else
+                        UI->call(players[curr].p, currBet, value);
                 }
                 players[curr].cash -= value;
                 players[curr].currBet += value;
@@ -357,24 +365,24 @@ void TexasHoldem::doBets(unsigned underTheGun) {
 
 std::vector<unsigned> TexasHoldem::showdown() {
     std::vector<unsigned> winners;
-    unsigned *maxValue = new unsigned[7], *currValue;
+    unsigned *maxValue = new unsigned[7];
     memset(maxValue, 0, sizeof(unsigned) * 7);
     OpenCard currCards[7];
-    OpenCard *highest;
     assert(board.size() == 5);
     for (int j = 0; j < 5; j++) {
         currCards[j] = board[j];
     }
     for (unsigned i = 0; i < inGame.size(); i++) {
         // TODO: write combination to log
-        currCards[6] = players[inGame[i]].hand[0];
-        currCards[7] = players[inGame[i]].hand[1];
-        std::pair<OpenCard*, unsigned*> comb = highestComb(currCards);
-        currValue = comb.second;
-        highest = comb.first;
-        switch(unsigned7cmp(currValue, maxValue)) {
+        currCards[5] = players[inGame[i]].hand[0];
+        currCards[6] = players[inGame[i]].hand[1];
+        std::pair<OpenCard*, unsigned*> curr = highestComb(currCards);
+        switch(unsigned7cmp(curr.second, maxValue)) {
             case 1:
                 winners.clear();
+                winners.push_back(inGame[i]);
+                memcpy(maxValue, curr.second, 7 * sizeof(unsigned));
+                break;
             case 0:
                 winners.push_back(inGame[i]);
                 break;
@@ -383,9 +391,9 @@ std::vector<unsigned> TexasHoldem::showdown() {
         }
 
         if (inGame.size() > 1)
-            UI->showdown(players[inGame[i]].p, highest, currValue);
-        delete[] highest;
-        delete[] currValue;
+            UI->showdown(players[inGame[i]].p, curr.first, curr.second);
+        delete[] curr.first;
+        delete[] curr.second;
     }
     delete[] maxValue;
 
@@ -444,6 +452,14 @@ BoardState TexasHoldem::getState(unsigned player, std::vector <unsigned> inGame)
     return bs;
 }
 
+size_t TexasHoldem::inGameWithCash() {
+    size_t cnt = 0;
+    for (unsigned i = 0; i < inGame.size(); i++) {
+        cnt += (players[inGame[i]].cash != 0);
+    }
+    return cnt;
+}
+
 void TexasHoldem::run() {
     inGame = refresh();
     dealer = 0;
@@ -457,4 +473,12 @@ void TexasHoldem::run() {
         pot = 0;
         inGame = refresh();
     }
+
+    std::vector<Player*> pl;
+    std::vector<unsigned> c;
+    for (unsigned i = 0; i < playersN; i++) {
+        pl.push_back(players[i].p);
+        c.push_back(players[i].cash);
+    }
+    UI->gameOver(pl, c);
 }
