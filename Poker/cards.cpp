@@ -1,6 +1,9 @@
 #include "cards.h"
 
-OpenCard::OpenCard() {}
+OpenCard::OpenCard() {
+    s = suit::clubs;
+    rank = 0;
+}
 
 OpenCard::OpenCard(suit const x, int const y) {
     s = x;

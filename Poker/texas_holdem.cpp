@@ -56,7 +56,7 @@ unsigned* TexasHoldem::evaluate(OpenCard *cards) {
 
     std::sort(cards, cards + 5, highestRankFirst);
     int diff[4], pos = 0;
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 4; i++) {
         if (cards[i].getRank() - cards[i + 1].getRank() > 1)
             pos = i + 1;
         diff[i] = cards[i].getRank() - cards[i + 1].getRank();
@@ -187,7 +187,7 @@ unsigned* TexasHoldem::evaluate(OpenCard *cards) {
 
 TexasHoldem::~TexasHoldem() {
     delete[] players;
-    delete[] UI;
+    delete UI;
 }
 
 TexasHoldem::PlayerData::~PlayerData() {
@@ -228,9 +228,9 @@ std::pair <OpenCard*, unsigned*> TexasHoldem::highestComb(OpenCard* source) {
     for (size_t i = 0; i < k; i++) {
         cardIndex[i] = i;
     }
-    unsigned *currValue = new unsigned[7], *maxValue = new unsigned[7];
+    unsigned *currValue, *maxValue = new unsigned[7];
     memset(maxValue, 0, sizeof(unsigned) * 7);
-    OpenCard curr[k], *maxCard = new OpenCard[k];
+    OpenCard *curr = new OpenCard[k], *maxCard = new OpenCard[k];
     do {
         for (size_t i = 0; i < k; i++) {
             curr[i] = source[cardIndex[i]];
@@ -240,8 +240,9 @@ std::pair <OpenCard*, unsigned*> TexasHoldem::highestComb(OpenCard* source) {
             memcpy(maxValue, currValue, sizeof(unsigned) * 7);
             memcpy(maxCard, curr, sizeof(OpenCard) * k);
         }
+        delete[] currValue;
     } while (nextCombination(cardIndex, k, n));
-    delete[] currValue;
+    delete[] curr;
 
     return std::make_pair(maxCard, maxValue);
 }
@@ -368,8 +369,9 @@ std::vector<unsigned> TexasHoldem::showdown() {
         // TODO: write combination to log
         currCards[6] = players[inGame[i]].hand[0];
         currCards[7] = players[inGame[i]].hand[1];
-        currValue = highestComb(currCards).second;
-        highest = highestComb(currCards).first;
+        std::pair<OpenCard*, unsigned*> comb = highestComb(currCards);
+        currValue = comb.second;
+        highest = comb.first;
         switch(unsigned7cmp(currValue, maxValue)) {
             case 1:
                 winners.clear();
@@ -383,6 +385,7 @@ std::vector<unsigned> TexasHoldem::showdown() {
         if (inGame.size() > 1)
             UI->showdown(players[inGame[i]].p, highest, currValue);
         delete[] highest;
+        delete[] currValue;
     }
     delete[] maxValue;
 

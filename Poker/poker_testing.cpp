@@ -134,7 +134,9 @@ TEST(correctness, evaluateCombination) {
             else {
                 EXPECT_EQ(0, unsigned7cmp(valueI, valueJ));
             }
+            delete[] valueJ;
         }
+        delete[] valueI;
     }
 
     delete[] testCards;
@@ -153,20 +155,16 @@ TEST(correctness, pickCombination) {
     TexasHoldem* game = createGame((unsigned)2, (unsigned)100, (unsigned) 10, ui,
             new HumanPlayer("First player", ui), new HumanPlayer("Second player", ui));
     std::pair<size_t, OpenCard*> out = readCards(pickFile);
-    OpenCard *testCards = out.second, *result;
+    OpenCard *testCards = out.second;
 
-    for (int i = 0; i < out.first / 7; i++) {
-        result = game->highestComb(&testCards[i * 7]).first;
-        for (int j = 0; j < 5; j++) {
-            int cnt = std::count(testCards + i * 7 ,
-                                 testCards + i * 7 + 5, result[j]);
-            if (cnt == 0) {
-                int x;
-                x++;
-            }
+    for (unsigned i = 0; i < out.first / 7; i++) {
+        std::pair<OpenCard*, unsigned*> result = game->highestComb(&testCards[i * 7]);
+        for (unsigned j = 0; j < 5; j++) {
             EXPECT_EQ(1, std::count(testCards + i * 7,
-                                    testCards + i * 7 + 5, result[j]));
+                                    testCards + i * 7 + 5, result.first[j]));
         }
+        delete[] result.first;
+        delete[] result.second;
     }
 
     delete[] testCards;
