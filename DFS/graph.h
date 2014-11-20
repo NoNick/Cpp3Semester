@@ -18,7 +18,7 @@ public:
     ~Graph();
     void loadFromFile(std::string const & filename);
     void saveToFile(std::string const & filename);
-    NodeHandle addNode(NodePayload x);
+    NodeHandle addNode();
     void addEdge(NodeHandle const & a, NodeHandle const & b);
     void forEachNode(std::function<void(NodeHandle const &)> const & visitor) const;
     size_t getNodesCount() const;
@@ -34,6 +34,7 @@ private:
     std::vector <NodePayload> payloads;
     template <class Archive>
     void serialize(Archive & ar, const unsigned int version);
+    NodePayload defaultPayload;
 };
 
 

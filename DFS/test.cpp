@@ -43,11 +43,11 @@ namespace {
         g = Graph<std::string>();
 
         for (size_t i = 0; i < N; i++) {
-            g.addNode(std::to_string(i));
+            g[g.addNode()] = std::to_string(i);
 
         }
         for (size_t i = 0; i < N; i++) {
-            for (size_t j = 0; j < N; j++) {
+            for (size_t j = i + 1; j < N; j++) {
                 g.addEdge(i, j);
             }
         }
@@ -60,6 +60,13 @@ TEST(correctness, CreateFullGraph) {
     EXPECT_EQ(N, g.getNodesCount());
 
     g.forEachNode(fullVisitor);
+}
+
+TEST(correctness, ChangePayload) {
+    Graph<int> g1;
+    Graph<int>::NodeHandle h = g1.addNode();
+    g1[h] = 10;
+    EXPECT_EQ(g1[h], 10);
 }
 
 TEST(correctness, SaveAndLoad) {
@@ -89,15 +96,15 @@ namespace {
 
     void createSingleVertexGraph() {
         g = Graph<std::string>();
-        g.addNode("");
+        g.addNode();
     }
 
     void createLineGraph() {
         g = Graph<std::string>();
         Graph<std::string>::NodeHandle last, curr;
-        last = g.addNode("");
+        last = g.addNode();
         for (size_t i = 1; i < N; i++) {
-            curr = g.addNode("");
+            curr = g.addNode();
             g.addEdge(curr, last);
             last = curr;
         }
@@ -106,9 +113,9 @@ namespace {
     void createEvenCycle() {
         g = Graph<std::string>();
         Graph<std::string>::NodeHandle last, curr, first;
-        last = first = g.addNode("");
+        last = first = g.addNode();
         for (size_t i = 1; i < (N / 2) * 2; i++) {
-            curr = g.addNode("");
+            curr = g.addNode();
             g.addEdge(curr, last);
             last = curr;
         }
@@ -118,9 +125,9 @@ namespace {
     void createOddCycle() {
         g = Graph<std::string>();
         Graph<std::string>::NodeHandle last, curr, first;
-        last = first = g.addNode("");
+        last = first = g.addNode();
         for (size_t i = 1; i < (N / 2) * 2 + 1; i++) {
-            curr = g.addNode("");
+            curr = g.addNode();
             g.addEdge(curr, last);
             last = curr;
         }
@@ -198,3 +205,4 @@ TEST(correctness, moveCheck) {
     createFullNGraph();
     g.forEachNode(moveNodeVisitor);
 }
+

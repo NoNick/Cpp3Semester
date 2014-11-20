@@ -44,9 +44,10 @@ template <typename NodePayload>
 // Isn't NodeHandle invariant with template parameter?
 // Do I have to set one to get typedef?
 // Maybe NodeHandle and EdgeHandle should be out of the class in graph.h
-Graph<int>::NodeHandle Graph<NodePayload>::addNode(NodePayload x) {
+Graph<int>::NodeHandle Graph<NodePayload>::addNode() {
     vertex.push_back(std::vector<NodeHandle>());
-    payloads.push_back(x);
+    vertex.back().reserve(1000);
+    payloads.push_back(defaultPayload);
     return vertex.size() - 1;
 }
 

@@ -41,7 +41,7 @@ public:<br>
 &emsp;&emsp;~Graph();<br>
 &emsp;&emsp;void loadFromFile(std::string const & filename);<br>
 &emsp;&emsp;void saveToFile(std::string const & filename);<br>
-&emsp;&emsp;NodeHandle addNode(NodePayload x);<br>
+&emsp;&emsp;NodeHandle addNode();<br>
 &emsp;&emsp;void addEdge(NodeHandle const & a, NodeHandle const & b);<br>
 &emsp;&emsp;void forEachNode(std::function<void(NodeHandle const &)> const & visitor) const;<br>
 &emsp;&emsp;size_t getNodesCount() const;<br>
