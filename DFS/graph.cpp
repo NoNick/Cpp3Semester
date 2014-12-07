@@ -46,9 +46,8 @@ template <typename NodePayload>
 // Maybe NodeHandle and EdgeHandle should be out of the class in graph.h
 Graph<int>::NodeHandle Graph<NodePayload>::addNode() {
     vertex.push_back(std::vector<NodeHandle>());
-    vertex.back().reserve(1000);
     payloads.push_back(defaultPayload);
-    return vertex.size() - 1;
+    return payloads.size() - 1;
 }
 
 
@@ -56,12 +55,12 @@ template <typename NodePayload>
 void Graph<NodePayload>::addEdge(NodeHandle const & a, NodeHandle const & b) {
     // there's no point for creating loops with one vertex in unweighted graph
     if (a != b) {
-        if (!std::count(vertex[a].begin(), vertex[a].end(), b)) {
+//        if (!std::count(vertex[a].begin(), vertex[a].end(), b)) {
             vertex[a].push_back(b);
-        }
-        if (!std::count(vertex[b].begin(), vertex[b].end(), a)) {
+//        }
+//        if (!std::count(vertex[b].begin(), vertex[b].end(), a)) {
             vertex[b].push_back(a);
-        }
+//        }
     }
 }
 

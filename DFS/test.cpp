@@ -5,11 +5,12 @@
 #include <array>
 
 namespace {
-    const size_t N = 100;
+    const size_t NCreate = 1000, NCheck = 100;
+    size_t N;
 
-    std::vector <std::string> other;
-    Graph<std::string>::NodeHandle curr;
-    Graph<std::string> g;
+    std::vector <int> other;
+    Graph<int>::NodeHandle curr;
+    Graph<int> g;
     void edgeVisitor(Graph<std::string>::EdgeHandle const & x) {
         if (x.first == curr) {
             other.push_back(g[x.second]);
@@ -25,7 +26,7 @@ namespace {
 
         for (size_t i = 0; i < N; i++) {
             if (curr != (Graph<std::string>::NodeHandle) i &&
-                !std::count(other.begin(), other.end(), std::to_string(i)))
+                !std::count(other.begin(), other.end(), i))
                 return false;
         }
 
@@ -39,12 +40,12 @@ namespace {
         EXPECT_TRUE(checkEdges());
     }
 
-    void createFullNGraph() {
-        g = Graph<std::string>();
+    void createFullNGraph(int n) {
+        g = Graph<int>();
+        N = n;
 
         for (size_t i = 0; i < N; i++) {
-            g[g.addNode()] = std::to_string(i);
-
+            g[g.addNode()] = i;
         }
         for (size_t i = 0; i < N; i++) {
             for (size_t j = i + 1; j < N; j++) {
@@ -55,7 +56,13 @@ namespace {
 }
 
 TEST(correctness, CreateFullGraph) {
-    createFullNGraph();
+    createFullNGraph(NCreate);
+
+    EXPECT_EQ(N, g.getNodesCount());
+}
+
+TEST(correctness, CreateAndTestFullGraph) {
+    createFullNGraph(NCheck);
 
     EXPECT_EQ(N, g.getNodesCount());
 
@@ -70,10 +77,10 @@ TEST(correctness, ChangePayload) {
 }
 
 TEST(correctness, SaveAndLoad) {
-    createFullNGraph();
+    createFullNGraph(NCheck);
 
     g.saveToFile("test.graph");
-    g = Graph<std::string>();
+    g = Graph<int>();
     g.loadFromFile("test.graph");
 
     EXPECT_EQ(N, g.getNodesCount());
@@ -95,15 +102,15 @@ namespace {
     bool bipartite;
 
     void createSingleVertexGraph() {
-        g = Graph<std::string>();
+        g = Graph<int>();
         g.addNode();
     }
 
     void createLineGraph() {
-        g = Graph<std::string>();
-        Graph<std::string>::NodeHandle last, curr;
+        g = Graph<int>();
+        Graph<int>::NodeHandle last, curr;
         last = g.addNode();
-        for (size_t i = 1; i < N; i++) {
+        for (size_t i = 1; i < NCreate; i++) {
             curr = g.addNode();
             g.addEdge(curr, last);
             last = curr;
@@ -111,10 +118,10 @@ namespace {
     }
 
     void createEvenCycle() {
-        g = Graph<std::string>();
+        g = Graph<int>();
         Graph<std::string>::NodeHandle last, curr, first;
         last = first = g.addNode();
-        for (size_t i = 1; i < (N / 2) * 2; i++) {
+        for (size_t i = 1; i < (NCreate / 2) * 2; i++) {
             curr = g.addNode();
             g.addEdge(curr, last);
             last = curr;
@@ -123,10 +130,10 @@ namespace {
     }
 
     void createOddCycle() {
-        g = Graph<std::string>();
+        g = Graph<int>();
         Graph<std::string>::NodeHandle last, curr, first;
         last = first = g.addNode();
-        for (size_t i = 1; i < (N / 2) * 2 + 1; i++) {
+        for (size_t i = 1; i < (NCreate / 2) * 2 + 1; i++) {
             curr = g.addNode();
             g.addEdge(curr, last);
             last = curr;
@@ -202,7 +209,7 @@ namespace {
 }
 
 TEST(correctness, moveCheck) {
-    createFullNGraph();
+    createFullNGraph(NCheck);
     g.forEachNode(moveNodeVisitor);
 }
 
